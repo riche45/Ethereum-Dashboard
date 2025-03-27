@@ -9,7 +9,7 @@
 
 ## 👨‍🎓 Academic Information
 
-This project was developed as part of my training at [CodeCrypto Academy](@https://github.com/codecrypto-academy). The goal is to demonstrate the practical implementation of blockchain concepts and modern web development.
+This project was developed as part of my training at [CodeCrypto Academy](https://github.com/codecrypto-academy). The goal is to demonstrate the practical implementation of blockchain concepts and modern web development.
 
 ## 📸 Screenshots
 

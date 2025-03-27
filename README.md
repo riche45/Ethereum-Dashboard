@@ -5,8 +5,11 @@
 ![License](https://img.shields.io/badge/License-MIT-green)
 ![Node.js](https://img.shields.io/badge/Node.js-18-green)
 ![Ethereum](https://img.shields.io/badge/Ethereum-Local-orange)
+![CodeCrypto](https://img.shields.io/badge/CodeCrypto-Academy-4CAF50)
 
-Un dashboard interactivo para gestionar una red Ethereum local, construido con React y TypeScript. Este proyecto demuestra la integración de tecnologías blockchain con aplicaciones web modernas.
+## 👨‍🎓 Información Académica
+
+Este proyecto fue desarrollado como parte de mi formación en [CodeCrypto Academy](https://github.com/apps/git-codecrypto-academy). El objetivo es demostrar la implementación práctica de conceptos de blockchain y desarrollo web moderno.
 
 ## 📸 Capturas de Pantalla
 

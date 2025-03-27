@@ -1,6 +1,22 @@
 # Ethereum Local Network Dashboard
 
+![React](https://img.shields.io/badge/React-18-blue)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
+![License](https://img.shields.io/badge/License-MIT-green)
+![Node.js](https://img.shields.io/badge/Node.js-18-green)
+![Ethereum](https://img.shields.io/badge/Ethereum-Local-orange)
+
 Un dashboard interactivo para gestionar una red Ethereum local, construido con React y TypeScript. Este proyecto demuestra la integración de tecnologías blockchain con aplicaciones web modernas.
+
+## 📸 Capturas de Pantalla
+
+<div align="center">
+  <img src="screenshots/dashboard.png" alt="Dashboard Principal" width="600"/>
+  <p><em>Dashboard Principal - Visualización de Balances</em></p>
+  
+  <img src="screenshots/transaction.png" alt="Envío de Transacción" width="600"/>
+  <p><em>Formulario de Envío de ETH</em></p>
+</div>
 
 ## 🚀 Características
 

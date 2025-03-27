@@ -1,0 +1,6 @@
+1. Información de tu nodo Ethereum:
+Dirección de minería: 0x8c1f450809eb0c5cc1982db461aa9c64eb7c5d0b
+Balance: 300,000,000,000,000 ETH
+Contraseña: 123456
+Chain ID: 15
+RPC URL: http://localhost:5556

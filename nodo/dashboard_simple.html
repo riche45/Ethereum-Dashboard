@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard Ethereum Local</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.5.3/dist/web3.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f0f0f0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 10px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .button {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .button:hover {
+            background: #45a049;
+        }
+        .error {
+            color: red;
+        }
+        .success {
+            color: green;
+        }
+        .input {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        .table th, .table td {
+            padding: 8px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        .table th {
+            background: #f5f5f5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dashboard Ethereum Local</h1>
+        <div class="grid">
+            <div class="card">
+                <h2>Estado de la Red</h2>
+                <button class="button" onclick="verificarRed()">Actualizar Estado</button>
+                <div id="infoRed"></div>
+            </div>
+            <div class="card">
+                <h2>Cuentas Disponibles</h2>
+                <button class="button" onclick="verificarCuentas()">Ver Cuentas</button>
+                <div id="infoCuentas"></div>
+            </div>
+            <div class="card">
+                <h2>Enviar ETH</h2>
+                <p>De: <input type="text" id="de" class="input" value="0x47c5d423684Fd66a33c70B464884D052e9c3eA93"></p>
+                <p>Para: <input type="text" id="para" class="input"></p>
+                <p>Cantidad (ETH): <input type="number" id="cantidad" class="input" value="1"></p>
+                <button class="button" onclick="enviarTransaccion()">Enviar</button>
+                <div id="infoTransaccion"></div>
+            </div>
+            <div class="card">
+                <h2>Configuración MetaMask</h2>
+                <p>Red: Nodo Local</p>
+                <p>RPC URL: http://localhost:5556</p>
+                <p>Chain ID: 15</p>
+                <p>Símbolo: ETH</p>
+                <button class="button" onclick="copiarConfiguracion()">Copiar Configuración</button>
+            </div>
+        </div>
+        <div class="card">
+            <h2>Últimas Transacciones</h2>
+            <button class="button" onclick="verTransacciones()">Ver Transacciones</button>
+            <div id="infoTransacciones"></div>
+        </div>
+    </div>
+    <script>
+        const web3 = new Web3("http://localhost:5556");
+        
+        async function verificarRed() {
+            try {
+                const networkId = await web3.eth.net.getId();
+                const blockNumber = await web3.eth.getBlockNumber();
+                const isMining = await web3.eth.isMining();
+                const gasPrice = await web3.eth.getGasPrice();
+                document.getElementById("infoRed").innerHTML = `
+                    <p class="success">Estado de la Red:</p>
+                    <p>ID: ${networkId}</p>
+                    <p>Último Bloque: ${blockNumber}</p>
+                    <p>Mining: ${isMining ? "Sí" : "No"}</p>
+                    <p>Gas Price: ${web3.utils.fromWei(gasPrice, "gwei")} Gwei</p>
+                `;
+            } catch (error) {
+                document.getElementById("infoRed").innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            }
+        }
+
+        async function verificarCuentas() {
+            try {
+                const cuentas = await web3.eth.getAccounts();
+                let html = "<table class='table'><tr><th>Dirección</th><th>Balance (ETH)</th></tr>";
+                for (const cuenta of cuentas) {
+                    const balance = await web3.eth.getBalance(cuenta);
+                    const balanceEth = web3.utils.fromWei(balance, "ether");
+                    html += `<tr><td>${cuenta}</td><td>${balanceEth}</td></tr>`;
+                }
+                html += "</table>";
+                document.getElementById("infoCuentas").innerHTML = html;
+            } catch (error) {
+                document.getElementById("infoCuentas").innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            }
+        }
+
+        async function enviarTransaccion() {
+            const infoDiv = document.getElementById("infoTransaccion");
+            const de = document.getElementById("de").value;
+            const para = document.getElementById("para").value;
+            const cantidad = document.getElementById("cantidad").value;
+            try {
+                if (!web3.utils.isAddress(de) || !web3.utils.isAddress(para)) {
+                    infoDiv.innerHTML = "<p class='error'>Dirección inválida</p>";
+                    return;
+                }
+                const cantidadWei = web3.utils.toWei(cantidad.toString(), "ether");
+                const tx = {
+                    from: de,
+                    to: para,
+                    value: cantidadWei,
+                    gas: 21000
+                };
+                const resultado = await web3.eth.sendTransaction(tx);
+                infoDiv.innerHTML = `
+                    <p class="success">¡Transacción enviada!</p>
+                    <p>Hash: ${resultado.transactionHash}</p>
+                `;
+            } catch (error) {
+                infoDiv.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            }
+        }
+
+        async function verTransacciones() {
+            try {
+                const blockNumber = await web3.eth.getBlockNumber();
+                let html = "<table class='table'><tr><th>Hash</th><th>De</th><th>Para</th><th>Valor (ETH)</th></tr>";
+                for (let i = blockNumber; i > Math.max(0, blockNumber - 5); i--) {
+                    const block = await web3.eth.getBlock(i, true);
+                    for (const tx of block.transactions) {
+                        html += `
+                            <tr>
+                                <td>${tx.hash.substring(0, 10)}...</td>
+                                <td>${tx.from.substring(0, 10)}...</td>
+                                <td>${tx.to.substring(0, 10)}...</td>
+                                <td>${web3.utils.fromWei(tx.value, "ether")}</td>
+                            </tr>
+                        `;
+                    }
+                }
+                html += "</table>";
+                document.getElementById("infoTransacciones").innerHTML = html;
+            } catch (error) {
+                document.getElementById("infoTransacciones").innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            }
+        }
+
+        function copiarConfiguracion() {
+            const config = `Red: Nodo Local\nRPC URL: http://localhost:5556\nChain ID: 15\nSímbolo: ETH`;
+            navigator.clipboard.writeText(config)
+                .then(() => alert("Configuración copiada al portapapeles"))
+                .catch(() => alert("Error al copiar"));
+        }
+    </script>
+</body>
+</html>

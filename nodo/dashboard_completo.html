@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard Ethereum Local</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.5.3/dist/web3.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f0f0f0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 10px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .button {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .button:hover {
+            background: #45a049;
+        }
+        .error {
+            color: red;
+        }
+        .success {
+            color: green;
+        }
+        .input {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        .table th, .table td {
+            padding: 8px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        .table th {
+            background: #f5f5f5;
+        }
+        .select {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dashboard Ethereum Local</h1>
+        <div class="grid">
+            <div class="card">
+                <h2>Estado de la Red</h2>
+                <button class="button" onclick="verificarRed()">Actualizar Estado</button>
+                <div id="infoRed"></div>
+            </div>
+            <div class="card">
+                <h2>Cuentas Disponibles</h2>
+                <button class="button" onclick="verificarCuentas()">Ver Cuentas</button>
+                <div id="infoCuentas"></div>
+            </div>
+            <div class="card">
+                <h2>Enviar ETH</h2>
+                <p>De: <select id="de" class="select" onchange="actualizarBalance()"></select></p>
+                <p>Para: <select id="para" class="select"></select></p>
+                <p>Cantidad (ETH): <input type="number" id="cantidad" class="input" value="1" step="0.1"></p>
+                <button class="button" onclick="conectarMetaMask()">Conectar MetaMask</button>
+                <button class="button" onclick="enviarTransaccion()">Enviar</button>
+                <div id="infoTransaccion"></div>
+            </div>
+            <div class="card">
+                <h2>Configuración MetaMask</h2>
+                <p>Red: Nodo Local</p>
+                <p>RPC URL: http://localhost:5556</p>
+                <p>Chain ID: 15</p>
+                <p>Símbolo: ETH</p>
+                <button class="button" onclick="copiarConfiguracion()">Copiar Configuración</button>
+            </div>
+        </div>
+        <div class="card">
+            <h2>Últimas Transacciones</h2>
+            <button class="button" onclick="verTransacciones()">Ver Transacciones</button>
+            <div id="infoTransacciones"></div>
+        </div>
+    </div>
+    <script>
+        let web3;
+        const cuentas = [
+            "0x47c5d423684Fd66a33c70B464884D052e9c3eA93",
+            "0x8c1f450809eb0c5cc1982db461aa9c64eb7c5d0b",
+            "0x25e604dc2c1347d8a2998675152ac2803acacf23"
+        ];
+
+        // Inicializar Web3 con MetaMask
+        async function initWeb3() {
+            try {
+                // Verificar si MetaMask está instalado
+                if (window.ethereum) {
+                    // Solicitar cuentas al usuario
+                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    web3 = new Web3(window.ethereum);
+                    
+                    // Actualizar el selector de cuentas
+                    const selectDe = document.getElementById("de");
+                    selectDe.innerHTML = "";
+                    for(const cuenta of accounts) {
+                        selectDe.innerHTML += `<option value="${cuenta}">${cuenta}</option>`;
+                    }
+                    
+                    document.getElementById("infoTransaccion").innerHTML = 
+                        "<p class='success'>MetaMask conectado. Selecciona una cuenta para enviar ETH.</p>";
+                } else {
+                    web3 = new Web3("http://localhost:5556");
+                    document.getElementById("infoTransaccion").innerHTML = 
+                        "<p class='error'>MetaMask no está instalado. Por favor, instala MetaMask para continuar.</p>";
+                }
+            } catch (error) {
+                console.error("Error al inicializar Web3:", error);
+                document.getElementById("infoTransaccion").innerHTML = 
+                    `<p class='error'>Error al conectar con MetaMask: ${error.message}</p>`;
+            }
+        }
+
+        async function conectarMetaMask() {
+            try {
+                if (!window.ethereum) {
+                    document.getElementById("infoTransaccion").innerHTML = 
+                        "<p class='error'>MetaMask no está instalado. Por favor, instala MetaMask para continuar.</p>";
+                    return;
+                }
+
+                // Solicitar cuentas al usuario
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                const selectDe = document.getElementById("de");
+                selectDe.innerHTML = "";
+                
+                for(const cuenta of accounts) {
+                    selectDe.innerHTML += `<option value="${cuenta}">${cuenta}</option>`;
+                }
+                
+                document.getElementById("infoTransaccion").innerHTML = 
+                    "<p class='success'>MetaMask conectado. Selecciona una cuenta para enviar ETH.</p>";
+            } catch (error) {
+                document.getElementById("infoTransaccion").innerHTML = 
+                    `<p class='error'>Error al conectar con MetaMask: ${error.message}</p>`;
+            }
+        }
+
+        async function cargarCuentas() {
+            const selectPara = document.getElementById("para");
+            selectPara.innerHTML = "";
+            
+            // Agregar las cuentas locales como destino
+            for(const cuenta of cuentas) {
+                selectPara.innerHTML += `<option value="${cuenta}">${cuenta}</option>`;
+            }
+        }
+
+        async function actualizarBalance() {
+            const cuenta = document.getElementById("de").value;
+            const balance = await web3.eth.getBalance(cuenta);
+            const balanceEth = web3.utils.fromWei(balance, "ether");
+            document.getElementById("infoTransaccion").innerHTML = `<p>Balance disponible: ${balanceEth} ETH</p>`;
+        }
+
+        async function verificarRed() {
+            try {
+                const networkId = await web3.eth.net.getId();
+                const blockNumber = await web3.eth.getBlockNumber();
+                const isMining = await web3.eth.isMining();
+                const gasPrice = await web3.eth.getGasPrice();
+                document.getElementById("infoRed").innerHTML = `
+                    <p class="success">Estado de la Red:</p>
+                    <p>ID: ${networkId}</p>
+                    <p>Último Bloque: ${blockNumber}</p>
+                    <p>Mining: ${isMining ? "Sí" : "No"}</p>
+                    <p>Gas Price: ${web3.utils.fromWei(gasPrice, "gwei")} Gwei</p>
+                `;
+            } catch(error) {
+                document.getElementById("infoRed").innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            }
+        }
+
+        async function verificarCuentas() {
+            try {
+                let html = "<table class='table'><tr><th>Dirección</th><th>Balance (ETH)</th></tr>";
+                for(const cuenta of cuentas) {
+                    const balance = await web3.eth.getBalance(cuenta);
+                    const balanceEth = web3.utils.fromWei(balance, "ether");
+                    html += `<tr><td>${cuenta}</td><td>${balanceEth}</td></tr>`;
+                }
+                html += "</table>";
+                document.getElementById("infoCuentas").innerHTML = html;
+            } catch(error) {
+                document.getElementById("infoCuentas").innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            }
+        }
+
+        async function enviarTransaccion() {
+            const infoDiv = document.getElementById("infoTransaccion");
+            const de = document.getElementById("de").value;
+            const para = document.getElementById("para").value;
+            const cantidad = document.getElementById("cantidad").value;
+            
+            try {
+                if(de === para) {
+                    infoDiv.innerHTML = "<p class='error'>No puedes enviar ETH a la misma cuenta</p>";
+                    return;
+                }
+
+                const cantidadWei = web3.utils.toWei(cantidad.toString(), "ether");
+                const tx = {
+                    from: de,
+                    to: para,
+                    value: cantidadWei,
+                    gas: 21000
+                };
+
+                // Si estamos usando MetaMask, usar el método de MetaMask
+                if (window.ethereum) {
+                    const resultado = await window.ethereum.request({
+                        method: 'eth_sendTransaction',
+                        params: [tx]
+                    });
+                    infoDiv.innerHTML = `<p class="success">¡Transacción enviada!</p><p>Hash: ${resultado}</p>`;
+                } else {
+                    const resultado = await web3.eth.sendTransaction(tx);
+                    infoDiv.innerHTML = `<p class="success">¡Transacción enviada!</p><p>Hash: ${resultado.transactionHash}</p>`;
+                }
+                
+                await verificarCuentas();
+            } catch(error) {
+                infoDiv.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            }
+        }
+
+        async function verTransacciones() {
+            try {
+                const blockNumber = await web3.eth.getBlockNumber();
+                let html = "<table class='table'><tr><th>Hash</th><th>De</th><th>Para</th><th>Valor (ETH)</th></tr>";
+                for(let i = blockNumber; i > Math.max(0, blockNumber-5); i--) {
+                    const block = await web3.eth.getBlock(i, true);
+                    for(const tx of block.transactions) {
+                        html += `
+                            <tr>
+                                <td>${tx.hash.substring(0,10)}...</td>
+                                <td>${tx.from.substring(0,10)}...</td>
+                                <td>${tx.to.substring(0,10)}...</td>
+                                <td>${web3.utils.fromWei(tx.value, "ether")}</td>
+                            </tr>
+                        `;
+                    }
+                }
+                html += "</table>";
+                document.getElementById("infoTransacciones").innerHTML = html;
+            } catch(error) {
+                document.getElementById("infoTransacciones").innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            }
+        }
+
+        function copiarConfiguracion() {
+            const config = `Red: Nodo Local
+RPC URL: http://localhost:5556
+Chain ID: 15
+Símbolo: ETH`;
+            navigator.clipboard.writeText(config)
+                .then(() => alert("Configuración copiada al portapapeles"))
+                .catch(() => alert("Error al copiar"));
+        }
+
+        // Inicializar Web3 al cargar la página
+        initWeb3();
+        cargarCuentas();
+    </script>
+</body>
+</html>

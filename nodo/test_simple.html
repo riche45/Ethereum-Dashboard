@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Red Local</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.5.3/dist/web3.min.js"></script>
+</head>
+<body>
+    <h1>Test Red Ethereum Local</h1>
+    <div>
+        <button onclick="verificarRed()">Verificar Red</button>
+        <div id="infoRed"></div>
+    </div>
+    <div>
+        <button onclick="verificarBalance()">Verificar Balance Cuenta Rica</button>
+        <div id="infoBalance"></div>
+    </div>
+    <script>
+        const web3 = new Web3("http://localhost:5556");
+        
+        async function verificarRed() {
+            try {
+                const networkId = await web3.eth.net.getId();
+                const blockNumber = await web3.eth.getBlockNumber();
+                document.getElementById("infoRed").innerHTML = 
+                    "Red ID: " + networkId + "<br>Último Bloque: " + blockNumber;
+            } catch (error) {
+                document.getElementById("infoRed").innerHTML = "Error: " + error.message;
+            }
+        }
+        
+        async function verificarBalance() {
+            try {
+                const balance = await web3.eth.getBalance("0x47c5d423684Fd66a33c70B464884D052e9c3eA93");
+                const balanceEth = web3.utils.fromWei(balance, "ether");
+                document.getElementById("infoBalance").innerHTML = 
+                    "Balance: " + balanceEth + " ETH";
+            } catch (error) {
+                document.getElementById("infoBalance").innerHTML = "Error: " + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
